@@ -80,7 +80,7 @@ export function AppSidebar({
         <SidebarSeparator />
         <div className="p-2 flex items-center justify-between group-data-[collapsible=icon]:justify-center">
           <h2 className="text-sm font-medium text-muted-foreground group-data-[collapsible=icon]:hidden">History</h2>
-          {/* Delete All button removed from here */}
+          
         </div>
         <ScrollArea className="h-[calc(100%-200px)] group-data-[collapsible=icon]:h-[calc(100%-160px)]">
           <SidebarMenu className="p-2">
