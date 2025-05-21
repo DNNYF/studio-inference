@@ -6,7 +6,7 @@ import { ChatMessage } from "./ChatMessage";
 import { MessageInput } from "./MessageInput";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { v4 as uuidv4 } from 'uuid'; // Needs: npm install uuid && npm install @types/uuid
+import { v4 as uuidv4 } from 'uuid'; 
 import { Bot } from 'lucide-react';
 
 interface ChatPanelProps {
