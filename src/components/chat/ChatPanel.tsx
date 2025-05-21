@@ -13,7 +13,7 @@ interface ChatPanelProps {
   currentSession: ConversationSession | null;
   setCurrentSession: (session: ConversationSession | null) => void;
   saveSession: (session: ConversationSession) => void;
-  apiEndpoint: string;
+  apiEndpoint: string | undefined; // Allow undefined
   systemPrompt?: string;
 }
 
@@ -78,14 +78,14 @@ export function ChatPanel({ currentSession, setCurrentSession, saveSession, apiE
     
     const requestBody: LmStudioRequestBody = {
       messages: apiMessages,
-      mode: "chat",
+      // mode: "chat", // Removed to be more standard OpenAI compatible
       stream: false,
       temperature: 0.7,
     };
 
     try {
       if (!apiEndpoint) {
-        throw new Error("API endpoint is not configured. Please set it in settings or .env file.");
+        throw new Error("API endpoint is not configured. Please set NEXT_PUBLIC_LM_STUDIO_API_ENDPOINT in your .env file.");
       }
       const response = await fetch(apiEndpoint, {
         method: "POST",
@@ -122,13 +122,12 @@ export function ChatPanel({ currentSession, setCurrentSession, saveSession, apiE
         throw new Error("Invalid response structure from API.");
       }
     } catch (error: any) {
-      console.error("Error fetching from LM Studio API:", error);
+      console.error("Error fetching from API:", error);
       toast({
         variant: "destructive",
         title: "API Error",
         description: error.message || "Failed to get response from AI.",
       });
-      // Optionally remove the user's message or add an error message to chat
        const errorResponseMessage: Message = {
          id: uuidv4(),
          role: "assistant",
@@ -152,7 +151,6 @@ export function ChatPanel({ currentSession, setCurrentSession, saveSession, apiE
       <ScrollArea className="flex-grow p-4" ref={scrollAreaRef}>
         {messages.length === 0 && !isLoading && (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-center">
-            {/* Ikon SVG dihapus dari sini */}
             <p className="text-lg mb-2">Start a conversation with Chat Studio</p>
             <p className="text-sm">Ask anything or pick a past conversation from the sidebar.</p>
           </div>
