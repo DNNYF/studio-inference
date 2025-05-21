@@ -13,13 +13,26 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
-// import { Input } from "@/components/ui/input"; // No longer needed
-// import { Label } from "@/components/ui/label"; // No longer needed
-import { Settings } from "lucide-react";
-// import { useToast } from '@/hooks/use-toast'; // No longer needed for API endpoint saving
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Settings, Trash2 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
-export function SettingsDialog() {
-  // const { toast } = useToast(); // Removed as no settings are saved here anymore
+interface SettingsDialogProps {
+  onDeleteAllSessions: () => void;
+  isHistoryEmpty: boolean;
+}
+
+export function SettingsDialog({ onDeleteAllSessions, isHistoryEmpty }: SettingsDialogProps) {
 
   return (
     <Dialog>
@@ -32,16 +45,54 @@ export function SettingsDialog() {
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
           <DialogDescription>
-            General application settings.
+            Manage application settings and data.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <p className="text-sm text-muted-foreground">
-            Currently, there are no user-configurable settings here.
-          </p>
-          <p className="text-sm text-muted-foreground">
-            The API endpoint for LM Studio is managed via environment variables (NEXT_PUBLIC_LM_STUDIO_API_ENDPOINT).
-          </p>
+        <div className="grid gap-6 py-4">
+          <div>
+            <h3 className="text-md font-medium mb-2">API Configuration</h3>
+            <p className="text-sm text-muted-foreground">
+              The API endpoint for LM Studio is managed via environment variables (NEXT_PUBLIC_LM_STUDIO_API_ENDPOINT).
+            </p>
+          </div>
+          
+          <Separator />
+
+          <div>
+            <h3 className="text-md font-medium mb-2">Data Management</h3>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  variant="destructive" 
+                  className="w-full justify-start"
+                  disabled={isHistoryEmpty}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete All Chat History
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete all your conversation history.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={onDeleteAllSessions} 
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete All
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            <p className="text-xs text-muted-foreground mt-2">
+              This will remove all your saved conversations from local storage.
+            </p>
+          </div>
         </div>
         <DialogFooter>
           <DialogClose asChild>

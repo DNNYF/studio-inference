@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { FilePlus2, Download, MessageSquareText, Settings, Trash2 } from "lucide-react";
+import { FilePlus2, Download, MessageSquareText, Trash2 } from "lucide-react";
 import {
   Sidebar,
   SidebarHeader,
@@ -19,7 +19,7 @@ import {
   SidebarSeparator,
   // SidebarMenuBadge, // Not currently used
   // SidebarTrigger // Not currently used here directly
-} from "@/components/ui/sidebar"; 
+} from "@/components/ui/sidebar";
 import { formatDistanceToNow } from 'date-fns';
 import {
   AlertDialog,
@@ -80,39 +80,17 @@ export function AppSidebar({
         <SidebarSeparator />
         <div className="p-2 flex items-center justify-between group-data-[collapsible=icon]:justify-center">
           <h2 className="text-sm font-medium text-muted-foreground group-data-[collapsible=icon]:hidden">History</h2>
-          {sessions.length > 0 && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="group-data-[collapsible=icon]:my-1" tooltip="Clear All History">
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete all your conversation history.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={onDeleteAllSessions} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                    Delete All
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
+          {/* Delete All button removed from here */}
         </div>
         <ScrollArea className="h-[calc(100%-200px)] group-data-[collapsible=icon]:h-[calc(100%-160px)]">
           <SidebarMenu className="p-2">
             {sortedSessions.map((session) => (
               <SidebarMenuItem key={session.id} className="group/menu-item">
-                <div className="relative flex items-center">
+                <div className="relative flex items-center w-full"> {/* Ensure this div takes full width */}
                   <SidebarMenuButton
                     isActive={session.id === currentSessionId}
                     onClick={() => onSelectSession(session.id)}
-                    className="truncate flex-grow"
+                    className="truncate flex-grow" // flex-grow to take available space
                     tooltip={session.title}
                   >
                     <MessageSquareText />
@@ -128,14 +106,14 @@ export function AppSidebar({
                            "absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0",
                            "opacity-0 group-hover/menu-item:opacity-100 focus-visible:opacity-100", 
                            "group-data-[collapsible=icon]:hidden", 
-                           "bg-transparent" 
+                           "bg-transparent hover:bg-destructive/10" 
                          )}
                          onClick={(e) => e.stopPropagation()} 
                          aria-label="Delete session"
                        >
                          <Trash2 className={cn(
                              "h-3.5 w-3.5 text-muted-foreground",
-                             "hover:text-destructive group-hover/menu-item:text-destructive" 
+                             "group-hover/menu-item:text-destructive" 
                            )} 
                          />
                        </Button>
@@ -189,11 +167,13 @@ export function AppSidebar({
             <span className="group-data-[collapsible=icon]:hidden">Export All</span>
           </Button>
         <div className="flex items-center justify-between group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-2">
-          <SettingsDialog />
+          <SettingsDialog 
+            onDeleteAllSessions={onDeleteAllSessions}
+            isHistoryEmpty={sessions.length === 0}
+          />
           <ThemeToggle />
         </div>
       </SidebarFooter>
     </Sidebar>
   );
 }
-
