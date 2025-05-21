@@ -107,59 +107,61 @@ export function AppSidebar({
         <ScrollArea className="h-[calc(100%-200px)] group-data-[collapsible=icon]:h-[calc(100%-160px)]">
           <SidebarMenu className="p-2">
             {sortedSessions.map((session) => (
-              <SidebarMenuItem key={session.id} className="relative group/menu-item">
-                <SidebarMenuButton
-                  isActive={session.id === currentSessionId}
-                  onClick={() => onSelectSession(session.id)}
-                  className="truncate"
-                  tooltip={session.title}
-                >
-                  <MessageSquareText />
-                  <span className="group-data-[collapsible=icon]:hidden flex-1 truncate">{session.title}</span>
-                </SidebarMenuButton>
-                
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                     <Button
-                       variant="ghost"
-                       size="icon"
-                       className={cn(
-                         "absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0",
-                         "opacity-0 group-hover/menu-item:opacity-100", // Visible on parent hover
-                         "group-data-[collapsible=icon]:hidden", // Hidden when sidebar is icon-only
-                         "bg-transparent" // Explicitly set transparent background
-                       )}
-                       onClick={(e) => e.stopPropagation()} 
-                       aria-label="Delete session"
-                     >
-                       <Trash2 className={cn(
-                           "h-3.5 w-3.5 text-muted-foreground",
-                           "group-hover/menu-item:text-destructive" // Icon color changes on parent hover
-                         )} 
-                       />
-                     </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Conversation?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete the conversation titled "{session.title}"? This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDeleteSession(session.id);
-                        }}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+              <SidebarMenuItem key={session.id} className="group/menu-item">
+                <div className="relative flex items-center">
+                  <SidebarMenuButton
+                    isActive={session.id === currentSessionId}
+                    onClick={() => onSelectSession(session.id)}
+                    className="truncate flex-grow"
+                    tooltip={session.title}
+                  >
+                    <MessageSquareText />
+                    <span className="group-data-[collapsible=icon]:hidden flex-1 truncate">{session.title}</span>
+                  </SidebarMenuButton>
+                  
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                       <Button
+                         variant="ghost"
+                         size="icon"
+                         className={cn(
+                           "absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0",
+                           "opacity-0 group-hover/menu-item:opacity-100 focus-visible:opacity-100", 
+                           "group-data-[collapsible=icon]:hidden", 
+                           "bg-transparent" 
+                         )}
+                         onClick={(e) => e.stopPropagation()} 
+                         aria-label="Delete session"
+                       >
+                         <Trash2 className={cn(
+                             "h-3.5 w-3.5 text-muted-foreground",
+                             "hover:text-destructive group-hover/menu-item:text-destructive" 
+                           )} 
+                         />
+                       </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Conversation?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete the conversation titled "{session.title}"? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteSession(session.id);
+                          }}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
                 
                 <span className="text-xs text-muted-foreground px-2 pt-0.5 group-data-[collapsible=icon]:hidden">
                    {formatDistanceToNow(new Date(session.lastUpdated), { addSuffix: true })}
