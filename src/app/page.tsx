@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -6,16 +7,17 @@ import { AppSidebar } from '@/components/AppSidebar';
 import { ChatPanel } from '@/components/chat/ChatPanel';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import { v4 as uuidv4 } from 'uuid';
-import { Sidebar, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { Button } from '@/components/ui/button';
+import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { PanelLeft } from 'lucide-react';
 
-const DEFAULT_API_ENDPOINT = "http://localhost:1234/v1/chat/completions";
+// Read API endpoint from environment variable, with a fallback to the previous default
+const LM_STUDIO_API_ENDPOINT = process.env.NEXT_PUBLIC_LM_STUDIO_API_ENDPOINT || "http://localhost:1234/v1/chat/completions";
 
 export default function ChatStudioPage() {
   const [sessions, setSessions] = useLocalStorage<ConversationSession[]>("chatSessions", []);
   const [currentSessionId, setCurrentSessionId] = useLocalStorage<string | null>("currentChatSessionId", null);
-  const [apiEndpoint, setApiEndpoint] = useLocalStorage<string>("lmStudioApiEndpoint", DEFAULT_API_ENDPOINT);
+  // API endpoint is now managed by environment variable, not local storage state
+  // const [apiEndpoint, setApiEndpoint] = useLocalStorage<string>("lmStudioApiEndpoint", DEFAULT_API_ENDPOINT);
   
   const [hydrated, setHydrated] = useState(false);
 
@@ -45,7 +47,7 @@ export default function ChatStudioPage() {
   }, [setSessions]);
 
   const handleNewChat = useCallback(() => {
-    setCurrentSessionId(null); // This will effectively clear the chat panel via currentSession becoming null
+    setCurrentSessionId(null); 
   }, [setCurrentSessionId]);
 
   const handleDeleteSession = useCallback((sessionId: string) => {
@@ -66,7 +68,7 @@ export default function ChatStudioPage() {
 
     const exportData = sessions.map(session => ({
       conversations: session.messages
-        .filter(msg => msg.role === 'user' || msg.role === 'assistant') // Only user and assistant messages
+        .filter(msg => msg.role === 'user' || msg.role === 'assistant') 
         .map(msg => ({
           role: msg.role === 'user' ? 'human' : 'assistant',
           content: msg.content,
@@ -86,7 +88,6 @@ export default function ChatStudioPage() {
   };
   
   if (!hydrated) {
-     // Render a loading state or null during SSR and hydration
     return (
       <div className="flex h-screen w-screen items-center justify-center">
         <svg className="animate-spin h-10 w-10 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -107,8 +108,7 @@ export default function ChatStudioPage() {
           onExportAll={handleExportAll}
           onDeleteSession={handleDeleteSession}
           onDeleteAllSessions={handleDeleteAllSessions}
-          apiEndpoint={apiEndpoint}
-          setApiEndpoint={setApiEndpoint}
+          // No longer passing apiEndpoint or setApiEndpoint from here
         />
         <SidebarInset className="flex-1 flex flex-col p-0 md:p-2 md:m-0 md:peer-data-[variant=inset]:ml-[var(--sidebar-width-icon)] peer-data-[state=expanded]:md:peer-data-[variant=inset]:ml-[var(--sidebar-width)] transition-[margin-left] duration-300 ease-in-out">
           <div className="p-2 md:hidden"> {/* Mobile trigger */}
@@ -121,7 +121,7 @@ export default function ChatStudioPage() {
               currentSession={currentSession}
               setCurrentSession={handleSetCurrentSession}
               saveSession={saveSession}
-              apiEndpoint={apiEndpoint}
+              apiEndpoint={LM_STUDIO_API_ENDPOINT} // Use the constant from environment variable
             />
           </main>
         </SidebarInset>
