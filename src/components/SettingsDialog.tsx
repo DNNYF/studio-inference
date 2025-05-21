@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,37 +11,20 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+// import { Input } from "@/components/ui/input"; // No longer needed
+// import { Label } from "@/components/ui/label"; // No longer needed
 import { Settings } from "lucide-react";
-import { useToast } from '@/hooks/use-toast';
+// import { useToast } from '@/hooks/use-toast'; // No longer needed for API endpoint saving
 
-interface SettingsDialogProps {
-  apiEndpoint: string;
-  setApiEndpoint: (endpoint: string) => void;
-}
-
-export function SettingsDialog({ apiEndpoint, setApiEndpoint }: SettingsDialogProps) {
-  const [localEndpoint, setLocalEndpoint] = useState(apiEndpoint);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    setLocalEndpoint(apiEndpoint);
-  }, [apiEndpoint]);
-
-  const handleSave = () => {
-    setApiEndpoint(localEndpoint);
-    toast({
-      title: "Settings Saved",
-      description: "API endpoint updated successfully.",
-    });
-  };
+export function SettingsDialog() {
+  // const { toast } = useToast(); // Removed as no settings are saved here anymore
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Settings">
+        <Button variant="ghost" size="icon" aria-label="Settings" tooltip="Application Settings">
           <Settings className="h-5 w-5" />
         </Button>
       </DialogTrigger>
@@ -48,25 +32,21 @@ export function SettingsDialog({ apiEndpoint, setApiEndpoint }: SettingsDialogPr
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
           <DialogDescription>
-            Configure your LM Studio API endpoint.
+            General application settings.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="api-endpoint" className="text-right col-span-1">
-              API URL
-            </Label>
-            <Input
-              id="api-endpoint"
-              value={localEndpoint}
-              onChange={(e) => setLocalEndpoint(e.target.value)}
-              className="col-span-3"
-              placeholder="http://localhost:1234/v1/chat/completions"
-            />
-          </div>
+          <p className="text-sm text-muted-foreground">
+            Currently, there are no user-configurable settings here.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            The API endpoint for LM Studio is managed via environment variables (NEXT_PUBLIC_LM_STUDIO_API_ENDPOINT).
+          </p>
         </div>
         <DialogFooter>
-          <Button type="submit" onClick={handleSave}>Save changes</Button>
+          <DialogClose asChild>
+            <Button type="button" variant="outline">Close</Button>
+          </DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>
