@@ -7,6 +7,7 @@ import { MessageInput } from "./MessageInput";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from 'uuid'; // Needs: npm install uuid && npm install @types/uuid
+import { Bot } from 'lucide-react';
 
 interface ChatPanelProps {
   currentSession: ConversationSession | null;
@@ -84,7 +85,7 @@ export function ChatPanel({ currentSession, setCurrentSession, saveSession, apiE
 
     try {
       if (!apiEndpoint) {
-        throw new Error("API endpoint is not configured. Please set it in settings.");
+        throw new Error("API endpoint is not configured. Please set it in settings or .env file.");
       }
       const response = await fetch(apiEndpoint, {
         method: "POST",
@@ -150,9 +151,9 @@ export function ChatPanel({ currentSession, setCurrentSession, saveSession, apiE
     <div className="flex flex-col h-full bg-card shadow-lg rounded-lg overflow-hidden">
       <ScrollArea className="flex-grow p-4" ref={scrollAreaRef}>
         {messages.length === 0 && !isLoading && (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-message-circle-heart mb-4 opacity-50"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M15.81 12.93a2.15 2.15 0 0 0-2.5-.42l-2.12 1.06a2.15 2.15 0 0 0-2.5.42c-.98.49-1.37 1.7-.92 2.65A1.6 1.6 0 0 0 9 17.5c.88 0 1.61-.61 2.03-1.37a2.03 2.03 0 0 0 .12-1.04Z"/></svg>
-            <p className="text-lg">Start a conversation with Chat Studio</p>
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-center">
+            {/* Ikon SVG dihapus dari sini */}
+            <p className="text-lg mb-2">Start a conversation with Chat Studio</p>
             <p className="text-sm">Ask anything or pick a past conversation from the sidebar.</p>
           </div>
         )}
