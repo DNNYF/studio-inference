@@ -17,8 +17,8 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarSeparator,
-  SidebarMenuBadge, // Added if you plan to use badges, otherwise optional
-  SidebarTrigger // Assuming SidebarTrigger is also from here if used for mobile toggle
+  // SidebarMenuBadge, // Not currently used
+  // SidebarTrigger // Not currently used here directly
 } from "@/components/ui/sidebar"; 
 import { formatDistanceToNow } from 'date-fns';
 import {
@@ -31,7 +31,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
+import { cn } from '@/lib/utils';
 
 
 interface AppSidebarProps {
@@ -71,7 +72,7 @@ export function AppSidebar({
       <SidebarSeparator />
       <SidebarContent className="p-0">
         <div className="p-2">
-          <Button onClick={onNewChat} className="w-full justify-start" variant="ghost">
+          <Button onClick={onNewChat} className="w-full justify-start" variant="ghost" tooltip="New Chat (Ctrl+B for sidebar)">
             <FilePlus2 className="mr-2 h-4 w-4" />
             <span className="group-data-[collapsible=icon]:hidden">New Chat</span>
           </Button>
@@ -122,11 +123,20 @@ export function AppSidebar({
                      <Button
                        variant="ghost"
                        size="icon"
-                       className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 opacity-0 group-hover/menu-item:opacity-100 group-data-[collapsible=icon]:hidden"
-                       onClick={(e) => e.stopPropagation()} // Prevent session selection
+                       className={cn(
+                         "absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0",
+                         "opacity-0 group-hover/menu-item:opacity-100", // Visible on parent hover
+                         "group-data-[collapsible=icon]:hidden", // Hidden when sidebar is icon-only
+                         "bg-transparent" // Explicitly set transparent background
+                       )}
+                       onClick={(e) => e.stopPropagation()} 
                        aria-label="Delete session"
                      >
-                       <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                       <Trash2 className={cn(
+                           "h-3.5 w-3.5 text-muted-foreground",
+                           "group-hover/menu-item:text-destructive" // Icon color changes on parent hover
+                         )} 
+                       />
                      </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
@@ -151,7 +161,7 @@ export function AppSidebar({
                   </AlertDialogContent>
                 </AlertDialog>
                 
-                <span className="text-xs text-muted-foreground px-2 group-data-[collapsible=icon]:hidden">
+                <span className="text-xs text-muted-foreground px-2 pt-0.5 group-data-[collapsible=icon]:hidden">
                    {formatDistanceToNow(new Date(session.lastUpdated), { addSuffix: true })}
                 </span>
               </SidebarMenuItem>
@@ -184,3 +194,4 @@ export function AppSidebar({
     </Sidebar>
   );
 }
+
