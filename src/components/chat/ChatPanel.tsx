@@ -41,8 +41,8 @@ export function ChatPanel({
   nvidiaApiKey,
   selectedApiProvider,
   systemPrompt = DEFAULT_SYSTEM_PROMPT,
-  lmStudioModelId = "bahasa-jawa", // Default LM Studio model
-  nvidiaModelId = "meta/llama-3.1-405b-instruct", // Default NVIDIA model
+  lmStudioModelId = "bahasa-jawa", 
+  nvidiaModelId = "meta/llama-3.1-405b-instruct", 
 }: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>(currentSession?.messages || []);
   const [isLoading, setIsLoading] = useState(false);
@@ -109,15 +109,17 @@ export function ChatPanel({
     if (selectedApiProvider === "nvidia") {
       currentModelId = nvidiaModelId;
       if (!nvidiaApiKey) {
-        toast({ variant: "destructive", title: "NVIDIA API Error", description: "NVIDIA API Key is not configured. Please set NEXT_PUBLIC_NVIDIA_API_KEY in your .env.local file.", duration: 10000 });
+        const errorMsg = "NVIDIA API Key is not configured. Please set NEXT_PUBLIC_NVIDIA_API_KEY in your .env.local file.";
+        toast({ variant: "destructive", title: "NVIDIA API Error", description: errorMsg, duration: 10000 });
         setIsLoading(false);
-        setMessages(prev => [...prev, { id: uuidv4(), role: "assistant", content: "Error: NVIDIA API Key not configured.", timestamp: Date.now() }]);
+        setMessages(prev => [...prev, { id: uuidv4(), role: "assistant", content: `Error: ${errorMsg}`, timestamp: Date.now() }]);
         return;
       }
       if (!currentModelId) {
-        toast({ variant: "destructive", title: "NVIDIA API Error", description: "NVIDIA Model ID is not configured.", duration: 10000 });
+        const errorMsg = "NVIDIA Model ID is not configured.";
+        toast({ variant: "destructive", title: "NVIDIA API Error", description: errorMsg, duration: 10000 });
         setIsLoading(false);
-        setMessages(prev => [...prev, { id: uuidv4(), role: "assistant", content: "Error: NVIDIA Model ID not configured.", timestamp: Date.now() }]);
+        setMessages(prev => [...prev, { id: uuidv4(), role: "assistant", content: `Error: ${errorMsg}`, timestamp: Date.now() }]);
         return;
       }
       requestUrl = `${NVIDIA_API_BASE_URL}/chat/completions`;
@@ -133,15 +135,17 @@ export function ChatPanel({
       currentModelId = lmStudioModelId;
       const effectiveLmStudioApiEndpoint = lmStudioApiEndpoint?.trim();
       if (!effectiveLmStudioApiEndpoint) {
-        toast({ variant: "destructive", title: "LM Studio API Error", description: "API endpoint is not configured. Please set NEXT_PUBLIC_LM_STUDIO_API_ENDPOINT in your .env.local file.", duration: 10000 });
+        const errorMsg = "LM Studio API endpoint is not configured. Please set NEXT_PUBLIC_LM_STUDIO_API_ENDPOINT in your .env.local file.";
+        toast({ variant: "destructive", title: "LM Studio API Error", description: errorMsg, duration: 10000 });
         setIsLoading(false);
-        setMessages(prev => [...prev, { id: uuidv4(), role: "assistant", content: "Error: LM Studio API endpoint not configured.", timestamp: Date.now() }]);
+        setMessages(prev => [...prev, { id: uuidv4(), role: "assistant", content: `Error: ${errorMsg}`, timestamp: Date.now() }]);
         return;
       }
        if (!currentModelId) {
-        toast({ variant: "destructive", title: "LM Studio API Error", description: "LM Studio Model ID is not configured.", duration: 10000 });
+        const errorMsg = "LM Studio Model ID is not configured.";
+        toast({ variant: "destructive", title: "LM Studio API Error", description: errorMsg, duration: 10000 });
         setIsLoading(false);
-        setMessages(prev => [...prev, { id: uuidv4(), role: "assistant", content: "Error: LM Studio Model ID not configured.", timestamp: Date.now() }]);
+        setMessages(prev => [...prev, { id: uuidv4(), role: "assistant", content: `Error: ${errorMsg}`, timestamp: Date.now() }]);
         return;
       }
       requestUrl = effectiveLmStudioApiEndpoint;
@@ -155,6 +159,10 @@ export function ChatPanel({
       responseDataExtractor = (data: LmStudioResponse) => data.choices?.[0]?.message?.content || null;
     }
 
+    console.log(`[ChatPanel] Attempting to fetch from: ${requestUrl}`);
+    console.log("[ChatPanel] Request Headers:", JSON.parse(JSON.stringify(requestHeaders))); // Clone to log plain object
+    console.log("[ChatPanel] Request Body:", requestBody);
+
     try {
       const response = await fetch(requestUrl, {
         method: "POST",
@@ -165,10 +173,10 @@ export function ChatPanel({
       if (!response.ok) {
         let errorBodyText = `Status: ${response.status}, StatusText: ${response.statusText}.`;
         try {
-            const errorBody = await response.json();
-            errorBodyText += ` Details: ${JSON.stringify(errorBody)}`;
+            const errorBodyJson = await response.json();
+            errorBodyText += ` Details: ${JSON.stringify(errorBodyJson)}`;
         } catch (e) {
-            const textError = await response.text().catch(() => "No further details available.");
+            const textError = await response.text().catch(() => "No further details available from response body.");
             errorBodyText += ` Response: ${textError}`;
         }
         throw new Error(`API request failed. ${errorBodyText}`);
@@ -194,16 +202,28 @@ export function ChatPanel({
          }
         saveSession(finalSession);
       } else {
-        throw new Error("Invalid response structure from API or empty message content.");
+        throw new Error("Invalid response structure from API or empty message content received.");
       }
     } catch (error: any) {
       console.error(`Error during API call to ${selectedApiProvider}:`, error);
-      let detailedErrorMessage = "An unexpected error occurred while contacting the AI.";
+      let detailedErrorMessage = `An unexpected error occurred while contacting the AI (${selectedApiProvider}).`;
 
       if (error instanceof TypeError && error.message.toLowerCase().includes("failed to fetch")) {
-         detailedErrorMessage = `Network Error: Failed to fetch from ${selectedApiProvider} API.\n\nTroubleshooting:\n1. ${selectedApiProvider === 'lmstudio' ? 'LM Studio CORS: Ensure LM Studio "Enable CORS" is ON.' : 'NVIDIA API: Check network or API status.'}\n2. ${selectedApiProvider === 'lmstudio' ? 'Pinggy Tunnel: Verify your Pinggy tunnel is active & correctly points to LM Studio.' : 'NVIDIA API Key: Ensure NEXT_PUBLIC_NVIDIA_API_KEY is correct and valid.'}\n3. ${selectedApiProvider === 'lmstudio' ? 'LM Studio Server: Make sure LM Studio is running & its API server is started.' : 'NVIDIA Model: Ensure the model ID is correct and accessible with your key.'}\n4. API URL / Key: Double-check relevant environment variables in .env.local.\n5. Browser Console: Look for more specific errors in the Network and Console tabs.\n6. Test Endpoint: Try accessing the API endpoint with a tool like Postman or curl to see if it's reachable outside the browser.`;
+        detailedErrorMessage = `Network Error: Failed to fetch from ${selectedApiProvider} API.\n\nTroubleshooting for ${selectedApiProvider.toUpperCase()}:\n`;
+        if (selectedApiProvider === 'lmstudio') {
+          detailedErrorMessage += `1. LM Studio CORS: Ensure "Enable CORS" is ON in LM Studio Server settings.\n`;
+          detailedErrorMessage += `2. Pinggy Tunnel: Verify your Pinggy tunnel (${lmStudioApiEndpoint || 'Not Set'}) is active & correctly points to LM Studio.\n`;
+          detailedErrorMessage += `3. LM Studio Server: Make sure LM Studio is running & its API server is started with the model ('${lmStudioModelId}') loaded.\n`;
+        } else if (selectedApiProvider === 'nvidia') {
+          detailedErrorMessage += `1. NVIDIA API Key: Ensure NEXT_PUBLIC_NVIDIA_API_KEY in .env.local is correct and valid for model '${nvidiaModelId}'.\n`;
+          detailedErrorMessage += `2. NVIDIA API Status: Check NVIDIA API status page for outages.\n`;
+          detailedErrorMessage += `3. Network: Check your internet connection and firewall settings.\n`;
+        }
+        detailedErrorMessage += `4. API URL / Key: Double-check relevant environment variables in .env.local. Restart dev server after .env changes.\n`;
+        detailedErrorMessage += `5. Browser Console & Network Tab: Look for more specific errors (F12). The Network tab shows request/response details.\n`;
+        detailedErrorMessage += `6. Test Endpoint: Confirm the API endpoint works with a tool like Postman or curl to isolate browser-specific issues (like CORS).`;
       } else if (error.message) {
-        detailedErrorMessage = error.message;
+        detailedErrorMessage = `Error: ${error.message}`;
       }
 
       toast({
@@ -216,7 +236,7 @@ export function ChatPanel({
        const errorResponseMessage: Message = {
          id: uuidv4(),
          role: "assistant",
-         content: `Error: ${detailedErrorMessage}`,
+         content: detailedErrorMessage, // Use the detailed message
          timestamp: Date.now(),
        };
        setMessages(prev => [...prev, errorResponseMessage]);
@@ -255,3 +275,4 @@ export function ChatPanel({
     </div>
   );
 }
+
