@@ -78,14 +78,14 @@ export function ChatPanel({ currentSession, setCurrentSession, saveSession, apiE
     
     const requestBody: LmStudioRequestBody = {
       messages: apiMessages,
-      // mode: "chat", // Removed to be more standard OpenAI compatible
+      mode: "chat", // Restored for LM Studio compatibility
       stream: false,
       temperature: 0.7,
     };
 
     try {
       if (!apiEndpoint) {
-        throw new Error("API endpoint is not configured. Please set NEXT_PUBLIC_LM_STUDIO_API_ENDPOINT in your .env file.");
+        throw new Error("API endpoint is not configured. Please set NEXT_PUBLIC_LM_STUDIO_API_ENDPOINT in your .env.local file.");
       }
       const response = await fetch(apiEndpoint, {
         method: "POST",
