@@ -51,7 +51,6 @@ export function ChatPanel({ currentSession, setCurrentSession, saveSession, apiE
     setMessages(updatedMessages);
     setIsLoading(true);
 
-    // Create or update session
     let sessionToUpdate: ConversationSession;
     if (currentSession) {
       sessionToUpdate = {
@@ -67,14 +66,14 @@ export function ChatPanel({ currentSession, setCurrentSession, saveSession, apiE
         timestamp: Date.now(),
         lastUpdated: Date.now(),
       };
-      setCurrentSession(sessionToUpdate); // Set as current if new
+      setCurrentSession(sessionToUpdate);
     }
     saveSession(sessionToUpdate);
 
 
     const apiMessages = [
       { role: "system", content: systemPrompt },
-      ...updatedMessages.map(msg => ({ role: msg.role as "user" | "assistant", content: msg.content })) // Ensure correct role type
+      ...updatedMessages.map(msg => ({ role: msg.role as "user" | "assistant", content: msg.content }))
     ];
     
     const requestBody: LmStudioRequestBody = {
@@ -92,19 +91,15 @@ export function ChatPanel({ currentSession, setCurrentSession, saveSession, apiE
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
-        mode: 'no-cors', // TEMPORARY DIAGNOSTIC CHANGE
+        // mode: 'no-cors', // TEMPORARY DIAGNOSTIC - REMOVE FOR NORMAL OPERATION
       });
 
       if (!response.ok) {
-        // With 'no-cors', response.ok will be false, status 0, and statusText empty for CORS errors
-        // We won't be able to read response.json() either.
-        const errorDetail = `Status: ${response.status}, StatusText: ${response.statusText}. This might indicate a CORS issue if status is 0. Check server CORS configuration.`;
-        // Attempt to get more info, but this will likely fail with no-cors
-        const errorData = await response.text().catch(() => "Could not read error response body (expected with no-cors).");
-        throw new Error(`API Error: ${errorDetail} Body: ${errorData}`);
+        // Attempt to get more info if possible, though this might be limited by CORS
+        const errorText = await response.text().catch(() => `Status: ${response.status}, StatusText: ${response.statusText}. No further details available.`);
+        throw new Error(`API request failed. ${errorText}`);
       }
 
-      // This part will likely not be reached or will fail with 'no-cors'
       const data = await response.json() as LmStudioResponse;
       
       if (data.choices && data.choices.length > 0 && data.choices[0].message) {
@@ -120,25 +115,35 @@ export function ChatPanel({ currentSession, setCurrentSession, saveSession, apiE
         setMessages(finalMessages);
         
         const finalSession = { ...sessionToUpdate, messages: finalMessages, lastUpdated: Date.now() };
-        if (currentSession?.id === finalSession.id || !currentSession) { // Update current session if it's the active one
+        if (currentSession?.id === finalSession.id || !currentSession) {
           setCurrentSession(finalSession);
         }
         saveSession(finalSession);
 
       } else {
-        throw new Error("Invalid response structure from API (or response body inaccessible due to no-cors).");
+        throw new Error("Invalid response structure from API.");
       }
     } catch (error: any) {
-      console.error("Error fetching from API:", error);
+      console.error("Error during API call:", error);
+      let detailedErrorMessage = "An unexpected error occurred while contacting the AI.";
+
+      if (error instanceof TypeError && error.message === "Failed to fetch") {
+        detailedErrorMessage = "Network Error: Failed to fetch. This is often due to CORS issues, the API server (LM Studio via Pinggy) being down, or an incorrect API URL. Please check: \n1. LM Studio server is running & API is enabled. \n2. Pinggy tunnel is active & correct. \n3. LM Studio CORS settings (allow your app's origin e.g., http://localhost:9002). \n4. The API URL in your .env.local file.";
+      } else if (error.message) {
+        detailedErrorMessage = error.message;
+      }
+
       toast({
         variant: "destructive",
-        title: "API Error",
-        description: error.message || "Failed to get response from AI.",
+        title: "API Connection Error",
+        description: detailedErrorMessage,
+        duration: 9000, // Show toast longer for detailed messages
       });
+
        const errorResponseMessage: Message = {
          id: uuidv4(),
          role: "assistant",
-         content: `Error: ${error.message || "Could not connect to AI."}`,
+         content: `Error: ${detailedErrorMessage}`,
          timestamp: Date.now(),
        };
        setMessages(prev => [...prev, errorResponseMessage]);
