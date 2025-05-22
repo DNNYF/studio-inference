@@ -10,8 +10,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { PanelLeft } from 'lucide-react';
 
-// Use the correct environment variable and provide a fallback
-const LM_STUDIO_API_ENDPOINT = process.env.NEXT_PUBLIC_LM_STUDIO_API_ENDPOINT || "http://localhost:1234/v1/chat/completions";
+// Use a placeholder for Pinggy URL. User should replace this in .env.local
+const DEFAULT_API_ENDPOINT = "https://your-pinggy-subdomain.pinggy.io/v1/chat/completions"; 
+
+const LM_STUDIO_API_ENDPOINT = process.env.NEXT_PUBLIC_LM_STUDIO_API_ENDPOINT || DEFAULT_API_ENDPOINT;
 
 export default function ChatStudioPage() {
   const [sessions, setSessions] = useLocalStorage<ConversationSession[]>("chatSessions", []);
