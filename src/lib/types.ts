@@ -16,7 +16,8 @@ export interface ConversationSession {
 
 export interface LmStudioRequestBody {
   messages: { role: "system" | "user" | "assistant"; content: string }[];
-  mode?: "chat"; // Optional, as per LM Studio docs
+  model?: string; // Added model parameter
+  mode?: "chat"; 
   stream?: boolean;
   temperature?: number;
   // Add any other parameters your LM Studio setup might need

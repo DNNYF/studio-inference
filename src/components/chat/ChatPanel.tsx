@@ -14,11 +14,12 @@ interface ChatPanelProps {
   currentSession: ConversationSession | null;
   setCurrentSession: (session: ConversationSession | null) => void;
   saveSession: (session: ConversationSession) => void;
-  apiEndpoint: string | undefined; // Allow undefined
+  apiEndpoint: string | undefined; 
   systemPrompt?: string;
 }
 
 const DEFAULT_SYSTEM_PROMPT = "You are a helpful AI assistant.";
+const DEFAULT_MODEL_ID = "bahasa-jawa"; // From user's screenshot
 
 export function ChatPanel({ currentSession, setCurrentSession, saveSession, apiEndpoint, systemPrompt = DEFAULT_SYSTEM_PROMPT }: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>(currentSession?.messages || []);
@@ -78,6 +79,7 @@ export function ChatPanel({ currentSession, setCurrentSession, saveSession, apiE
     
     const requestBody: LmStudioRequestBody = {
       messages: apiMessages,
+      model: DEFAULT_MODEL_ID, // Added model identifier
       mode: "chat", 
       stream: false,
       temperature: 0.7,
@@ -96,9 +98,16 @@ export function ChatPanel({ currentSession, setCurrentSession, saveSession, apiE
       });
 
       if (!response.ok) {
-        // Attempt to get more info if possible
-        const errorText = await response.text().catch(() => `Status: ${response.status}, StatusText: ${response.statusText}. No further details available.`);
-        throw new Error(`API request failed. ${errorText}`);
+        let errorBodyText = `Status: ${response.status}, StatusText: ${response.statusText}.`;
+        try {
+            const errorBody = await response.json();
+            errorBodyText += ` Details: ${JSON.stringify(errorBody)}`;
+        } catch (e) {
+            // Could not parse JSON body or no body
+            const textError = await response.text().catch(() => "No further details available.");
+            errorBodyText += ` Details: ${textError}`;
+        }
+        throw new Error(`API request failed. ${errorBodyText}`);
       }
 
       const data = await response.json() as LmStudioResponse;
@@ -129,7 +138,7 @@ export function ChatPanel({ currentSession, setCurrentSession, saveSession, apiE
       let detailedErrorMessage = "An unexpected error occurred while contacting the AI.";
 
       if (error instanceof TypeError && error.message.toLowerCase().includes("failed to fetch")) {
-         detailedErrorMessage = "Network Error: Failed to fetch. This is OFTEN due to CORS issues, the API server (LM Studio via Pinggy) being down, or an incorrect API URL.\n\nTroubleshooting Steps:\n1. LM Studio CORS Settings: Ensure LM Studio allows requests from your app's origin (e.g., http://localhost:9002). Check LM Studio's server settings for 'Allowed Origins' or 'CORS: Allow all'.\n2. Pinggy Tunnel: Verify your Pinggy tunnel is active and correctly pointing to your LM Studio server.\n3. LM Studio Server: Make sure LM Studio is running and its API server is enabled.\n4. API URL: Double-check NEXT_PUBLIC_LM_STUDIO_API_ENDPOINT in your .env.local file.\n5. Browser Console: Look for more specific CORS error messages in your browser's developer console (Network tab).";
+         detailedErrorMessage = "Network Error: Failed to fetch.\n\nTroubleshooting:\n1. LM Studio CORS: Ensure LM Studio's 'Enable CORS' is ON (in Server settings). This is the most common fix.\n2. Pinggy Tunnel: Verify your Pinggy tunnel is active & correctly points to LM Studio (e.g., to http://localhost:1234 or your local IP).\n3. LM Studio Server: Make sure LM Studio is running & its API server is started.\n4. API URL: Double-check NEXT_PUBLIC_LM_STUDIO_API_ENDPOINT in .env.local. It should match your Pinggy URL.\n5. Browser Console: Look for more specific CORS errors in your browser's developer console (Network tab).";
       } else if (error.message) {
         detailedErrorMessage = error.message;
       }
@@ -138,7 +147,7 @@ export function ChatPanel({ currentSession, setCurrentSession, saveSession, apiE
         variant: "destructive",
         title: "API Connection Error",
         description: detailedErrorMessage,
-        duration: 15000, 
+        duration: 20000, 
       });
 
        const errorResponseMessage: Message = {
@@ -184,4 +193,3 @@ export function ChatPanel({ currentSession, setCurrentSession, saveSession, apiE
     </div>
   );
 }
-
