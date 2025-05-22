@@ -41,8 +41,8 @@ export function ChatPanel({
   nvidiaApiKey,
   selectedApiProvider,
   systemPrompt = DEFAULT_SYSTEM_PROMPT,
-  lmStudioModelId,
-  nvidiaModelId,
+  lmStudioModelId = "bahasa-jawa", // Default LM Studio model
+  nvidiaModelId = "meta/llama-3.1-405b-instruct", // Default NVIDIA model
 }: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>(currentSession?.messages || []);
   const [isLoading, setIsLoading] = useState(false);
@@ -104,15 +104,17 @@ export function ChatPanel({
     let requestBody: LmStudioRequestBody | GenericChatCompletionRequest;
     let requestHeaders: HeadersInit = { "Content-Type": "application/json" };
     let responseDataExtractor: (data: any) => string | null;
+    let currentModelId: string | undefined;
 
     if (selectedApiProvider === "nvidia") {
+      currentModelId = nvidiaModelId;
       if (!nvidiaApiKey) {
         toast({ variant: "destructive", title: "NVIDIA API Error", description: "NVIDIA API Key is not configured. Please set NEXT_PUBLIC_NVIDIA_API_KEY in your .env.local file.", duration: 10000 });
         setIsLoading(false);
         setMessages(prev => [...prev, { id: uuidv4(), role: "assistant", content: "Error: NVIDIA API Key not configured.", timestamp: Date.now() }]);
         return;
       }
-      if (!nvidiaModelId) {
+      if (!currentModelId) {
         toast({ variant: "destructive", title: "NVIDIA API Error", description: "NVIDIA Model ID is not configured.", duration: 10000 });
         setIsLoading(false);
         setMessages(prev => [...prev, { id: uuidv4(), role: "assistant", content: "Error: NVIDIA Model ID not configured.", timestamp: Date.now() }]);
@@ -121,13 +123,14 @@ export function ChatPanel({
       requestUrl = `${NVIDIA_API_BASE_URL}/chat/completions`;
       requestHeaders["Authorization"] = `Bearer ${nvidiaApiKey}`;
       requestBody = {
-        model: nvidiaModelId,
+        model: currentModelId,
         messages: apiMessages,
         temperature: 0.7,
         stream: false,
       };
       responseDataExtractor = (data: GenericChatCompletionResponse) => data.choices?.[0]?.message?.content || null;
     } else { // lmstudio
+      currentModelId = lmStudioModelId;
       const effectiveLmStudioApiEndpoint = lmStudioApiEndpoint?.trim();
       if (!effectiveLmStudioApiEndpoint) {
         toast({ variant: "destructive", title: "LM Studio API Error", description: "API endpoint is not configured. Please set NEXT_PUBLIC_LM_STUDIO_API_ENDPOINT in your .env.local file.", duration: 10000 });
@@ -135,7 +138,7 @@ export function ChatPanel({
         setMessages(prev => [...prev, { id: uuidv4(), role: "assistant", content: "Error: LM Studio API endpoint not configured.", timestamp: Date.now() }]);
         return;
       }
-       if (!lmStudioModelId) {
+       if (!currentModelId) {
         toast({ variant: "destructive", title: "LM Studio API Error", description: "LM Studio Model ID is not configured.", duration: 10000 });
         setIsLoading(false);
         setMessages(prev => [...prev, { id: uuidv4(), role: "assistant", content: "Error: LM Studio Model ID not configured.", timestamp: Date.now() }]);
@@ -144,7 +147,7 @@ export function ChatPanel({
       requestUrl = effectiveLmStudioApiEndpoint;
       requestBody = {
         messages: apiMessages,
-        model: lmStudioModelId, 
+        model: currentModelId, 
         mode: "chat",
         stream: false,
         temperature: 0.7,
@@ -198,7 +201,7 @@ export function ChatPanel({
       let detailedErrorMessage = "An unexpected error occurred while contacting the AI.";
 
       if (error instanceof TypeError && error.message.toLowerCase().includes("failed to fetch")) {
-         detailedErrorMessage = `Network Error: Failed to fetch from ${selectedApiProvider} API.\n\nTroubleshooting:\n1. ${selectedApiProvider === 'lmstudio' ? 'LM Studio CORS: Ensure LM Studio "Enable CORS" is ON.' : 'NVIDIA API: Check network or API status.'}\n2. ${selectedApiProvider === 'lmstudio' ? 'Pinggy Tunnel: Verify your Pinggy tunnel is active & correctly points to LM Studio.' : 'NVIDIA API Key: Ensure NEXT_PUBLIC_NVIDIA_API_KEY is correct.'}\n3. ${selectedApiProvider === 'lmstudio' ? 'LM Studio Server: Make sure LM Studio is running & its API server is started.' : 'API Endpoint: Verify the API endpoint is reachable.'}\n4. API URL / Key: Double-check relevant environment variables.\n5. Browser Console: Look for more specific errors (Network tab).`;
+         detailedErrorMessage = `Network Error: Failed to fetch from ${selectedApiProvider} API.\n\nTroubleshooting:\n1. ${selectedApiProvider === 'lmstudio' ? 'LM Studio CORS: Ensure LM Studio "Enable CORS" is ON.' : 'NVIDIA API: Check network or API status.'}\n2. ${selectedApiProvider === 'lmstudio' ? 'Pinggy Tunnel: Verify your Pinggy tunnel is active & correctly points to LM Studio.' : 'NVIDIA API Key: Ensure NEXT_PUBLIC_NVIDIA_API_KEY is correct and valid.'}\n3. ${selectedApiProvider === 'lmstudio' ? 'LM Studio Server: Make sure LM Studio is running & its API server is started.' : 'NVIDIA Model: Ensure the model ID is correct and accessible with your key.'}\n4. API URL / Key: Double-check relevant environment variables in .env.local.\n5. Browser Console: Look for more specific errors in the Network and Console tabs.\n6. Test Endpoint: Try accessing the API endpoint with a tool like Postman or curl to see if it's reachable outside the browser.`;
       } else if (error.message) {
         detailedErrorMessage = error.message;
       }
