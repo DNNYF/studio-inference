@@ -10,8 +10,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { PanelLeft } from 'lucide-react';
 
-
-const LM_STUDIO_API_ENDPOINT = process.env.API_ENDPOINT;
+// Use the correct environment variable and provide a fallback
+const LM_STUDIO_API_ENDPOINT = process.env.NEXT_PUBLIC_LM_STUDIO_API_ENDPOINT || "http://localhost:1234/v1/chat/completions";
 
 export default function ChatStudioPage() {
   const [sessions, setSessions] = useLocalStorage<ConversationSession[]>("chatSessions", []);
@@ -107,7 +107,6 @@ export default function ChatStudioPage() {
           onExportAll={handleExportAll}
           onDeleteSession={handleDeleteSession}
           onDeleteAllSessions={handleDeleteAllSessions}
-          
         />
         <SidebarInset className="flex-1 flex flex-col p-0 md:p-2 md:m-0 md:peer-data-[variant=inset]:ml-[var(--sidebar-width-icon)] peer-data-[state=expanded]:md:peer-data-[variant=inset]:ml-[var(--sidebar-width)] transition-[margin-left] duration-300 ease-in-out">
           <div className="p-2 md:hidden"> {/* Mobile trigger */}
