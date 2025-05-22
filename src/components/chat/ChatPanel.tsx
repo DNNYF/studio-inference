@@ -160,7 +160,7 @@ export function ChatPanel({
     }
 
     console.log(`[ChatPanel] Attempting to fetch from: ${requestUrl}`);
-    console.log("[ChatPanel] Request Headers:", JSON.parse(JSON.stringify(requestHeaders))); // Clone to log plain object
+    console.log("[ChatPanel] Request Headers:", JSON.parse(JSON.stringify(requestHeaders))); 
     console.log("[ChatPanel] Request Body:", requestBody);
 
     try {
@@ -209,19 +209,38 @@ export function ChatPanel({
       let detailedErrorMessage = `An unexpected error occurred while contacting the AI (${selectedApiProvider}).`;
 
       if (error instanceof TypeError && error.message.toLowerCase().includes("failed to fetch")) {
-        detailedErrorMessage = `Network Error: Failed to fetch from ${selectedApiProvider} API.\n\nTroubleshooting for ${selectedApiProvider.toUpperCase()}:\n`;
+        detailedErrorMessage = 
+`🔴 **Network Error: Failed to fetch from ${selectedApiProvider} API.** 🔴
+
+This usually means the browser could not connect to or was blocked from accessing the API. 
+**Please check your browser's Developer Console (F12) > Network Tab.** 
+Look for the failed request to '${requestUrl}' and inspect its 'Status' and 'Headers'. 
+You might see more specific errors like 'net::ERR_CONNECTION_REFUSED', 'net::ERR_CERT_COMMON_NAME_INVALID', or CORS preflight (OPTIONS request) failures.
+
+Troubleshooting for **${selectedApiProvider.toUpperCase()}**:
+`;
         if (selectedApiProvider === 'lmstudio') {
-          detailedErrorMessage += `1. LM Studio CORS: Ensure "Enable CORS" is ON in LM Studio Server settings.\n`;
-          detailedErrorMessage += `2. Pinggy Tunnel: Verify your Pinggy tunnel (${lmStudioApiEndpoint || 'Not Set'}) is active & correctly points to LM Studio.\n`;
-          detailedErrorMessage += `3. LM Studio Server: Make sure LM Studio is running & its API server is started with the model ('${lmStudioModelId}') loaded.\n`;
+          detailedErrorMessage += `1. **LM Studio CORS**: Ensure "Enable CORS" is ON in LM Studio Server settings. Add your app's origin (e.g., http://localhost:${window.location.port}) if specific origins are required.
+2. **Pinggy Tunnel**: 
+   - Verify your Pinggy tunnel ('${lmStudioApiEndpoint || 'Not Set'}') is ACTIVE and correctly points to your LM Studio server (e.g., http://localhost:1234).
+   - Free Pinggy URLs can change; ensure it's current.
+3. **LM Studio Server**: Make sure LM Studio is running, its API server is started, and the model ('${lmStudioModelId}') is loaded and ready.
+4. **URL & .env**: Confirm 'NEXT_PUBLIC_LM_STUDIO_API_ENDPOINT' in '.env.local' is the exact Pinggy URL ending with '/v1/chat/completions'. Restart dev server after .env changes.
+5. **Firewall/Network**: Check for firewalls blocking Pinggy or LM Studio.
+`;
         } else if (selectedApiProvider === 'nvidia') {
-          detailedErrorMessage += `1. NVIDIA API Key: Ensure NEXT_PUBLIC_NVIDIA_API_KEY in .env.local is correct and valid for model '${nvidiaModelId}'.\n`;
-          detailedErrorMessage += `2. NVIDIA API Status: Check NVIDIA API status page for outages.\n`;
-          detailedErrorMessage += `3. Network: Check your internet connection and firewall settings.\n`;
+          detailedErrorMessage += `1. **NVIDIA API Key**: Ensure 'NEXT_PUBLIC_NVIDIA_API_KEY' in '.env.local' is correct and valid for model '${nvidiaModelId}'.
+2. **NVIDIA API Status**: Check NVIDIA API status page for outages.
+3. **Network/Firewall**: Check your internet connection and firewall settings.
+4. **CORS (if applicable)**: While less common for major cloud APIs, ensure no intermediate proxies are stripping headers.
+`;
         }
-        detailedErrorMessage += `4. API URL / Key: Double-check relevant environment variables in .env.local. Restart dev server after .env changes.\n`;
-        detailedErrorMessage += `5. Browser Console & Network Tab: Look for more specific errors (F12). The Network tab shows request/response details.\n`;
-        detailedErrorMessage += `6. Test Endpoint: Confirm the API endpoint works with a tool like Postman or curl to isolate browser-specific issues (like CORS).`;
+        detailedErrorMessage += `
+**General Client-Side Checks:**
+- **Browser Console (Network Tab)**: Provides the MOST specific error.
+- **Try Incognito Mode**: To rule out browser extensions interfering.
+- **Test Endpoint**: Confirm the API URL works with Postman/curl to isolate browser-specific issues.
+`;
       } else if (error.message) {
         detailedErrorMessage = `Error: ${error.message}`;
       }
@@ -229,14 +248,14 @@ export function ChatPanel({
       toast({
         variant: "destructive",
         title: `${selectedApiProvider.toUpperCase()} API Connection Error`,
-        description: detailedErrorMessage,
-        duration: 20000, 
+        description: (<div className="whitespace-pre-wrap">{detailedErrorMessage}</div>),
+        duration: 30000, 
       });
 
        const errorResponseMessage: Message = {
          id: uuidv4(),
          role: "assistant",
-         content: detailedErrorMessage, // Use the detailed message
+         content: detailedErrorMessage,
          timestamp: Date.now(),
        };
        setMessages(prev => [...prev, errorResponseMessage]);
