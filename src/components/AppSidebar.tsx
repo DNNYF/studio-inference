@@ -2,7 +2,7 @@
 "use client";
 
 import React from 'react';
-import type { ConversationSession } from '@/lib/types';
+import type { ConversationSession, ApiProvider } from '@/lib/types';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SettingsDialog } from "@/components/SettingsDialog";
@@ -17,8 +17,6 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarSeparator,
-  // SidebarMenuBadge, // Not currently used
-  // SidebarTrigger // Not currently used here directly
 } from "@/components/ui/sidebar";
 import { formatDistanceToNow } from 'date-fns';
 import {
@@ -34,7 +32,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from '@/lib/utils';
 
-
 interface AppSidebarProps {
   sessions: ConversationSession[];
   currentSessionId: string | null;
@@ -43,6 +40,9 @@ interface AppSidebarProps {
   onExportAll: () => void;
   onDeleteSession: (sessionId: string) => void;
   onDeleteAllSessions: () => void;
+  isHistoryEmpty: boolean;
+  selectedApiProvider: ApiProvider;
+  setSelectedApiProvider: (provider: ApiProvider) => void;
 }
 
 export function AppSidebar({
@@ -53,6 +53,9 @@ export function AppSidebar({
   onExportAll,
   onDeleteSession,
   onDeleteAllSessions,
+  isHistoryEmpty,
+  selectedApiProvider,
+  setSelectedApiProvider,
 }: AppSidebarProps) {
   const sortedSessions = [...sessions].sort((a, b) => b.lastUpdated - a.lastUpdated);
 
@@ -60,12 +63,7 @@ export function AppSidebar({
     <Sidebar collapsible="icon" className="border-r">
       <SidebarHeader className="p-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" className="h-7 w-7 text-primary">
-            <rect width="256" height="256" fill="none"/>
-            <path d="M128,24a96,96,0,0,0-96,96c0,30.9,14.6,64.2,40.7,87.4C89.1,222.2,108.4,232,128,232a95.8,95.8,0,0,0,96-96A96,96,0,0,0,128,24Zm0,168a64.5,64.5,0,0,1-64-64A64,64,0,0,1,128,64a64.5,64.5,0,0,1,64,64A64,64,0,0,1,128,192Z" opacity="0.2"/>
-            <path d="M128,24a96,96,0,0,0-96,96c0,30.9,14.6,64.2,40.7,87.4C89.1,222.2,108.4,232,128,232s38.9-9.8,55.3-24.6C209.4,184.2,224,150.9,224,120A96,96,0,0,0,128,24Zm0,192c-17.8,0-35.3-8.4-50.4-21.6C59.8,176.7,48,147.7,48,120a80,80,0,0,1,160,0c0,27.7-11.8,56.7-33.6,74.4C163.3,207.6,145.8,216,128,216Z" fill="currentColor"/>
-            <path d="M128,64a64,64,0,1,0,64,64A64.1,64.1,0,0,0,128,64Zm0,112a48,48,0,1,1,48-48A48,48,0,0,1,128,176Z" fill="currentColor"/>
-          </svg>
+          {/* Replaced SVG with simple text based on previous request */}
           <h1 className="text-xl font-semibold group-data-[collapsible=icon]:hidden">Chat Studio</h1>
         </div>
       </SidebarHeader>
@@ -80,17 +78,16 @@ export function AppSidebar({
         <SidebarSeparator />
         <div className="p-2 flex items-center justify-between group-data-[collapsible=icon]:justify-center">
           <h2 className="text-sm font-medium text-muted-foreground group-data-[collapsible=icon]:hidden">History</h2>
-          
         </div>
         <ScrollArea className="h-[calc(100%-200px)] group-data-[collapsible=icon]:h-[calc(100%-160px)]">
           <SidebarMenu className="p-2">
             {sortedSessions.map((session) => (
               <SidebarMenuItem key={session.id} className="group/menu-item">
-                <div className="relative flex items-center w-full"> {/* Ensure this div takes full width */}
+                <div className="relative flex items-center w-full">
                   <SidebarMenuButton
                     isActive={session.id === currentSessionId}
                     onClick={() => onSelectSession(session.id)}
-                    className="truncate flex-grow" // flex-grow to take available space
+                    className="truncate flex-grow" 
                     tooltip={session.title}
                   >
                     <MessageSquareText />
@@ -106,14 +103,13 @@ export function AppSidebar({
                            "absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0",
                            "opacity-0 group-hover/menu-item:opacity-100 focus-visible:opacity-100", 
                            "group-data-[collapsible=icon]:hidden", 
-                           "bg-transparent hover:bg-destructive/10" 
+                           "bg-transparent hover:bg-destructive/10"
                          )}
                          onClick={(e) => e.stopPropagation()} 
                          aria-label="Delete session"
                        >
                          <Trash2 className={cn(
-                             "h-3.5 w-3.5 text-muted-foreground",
-                             "group-hover/menu-item:text-destructive" 
+                             "h-3.5 w-3.5 text-muted-foreground group-hover/menu-item:text-destructive" 
                            )} 
                          />
                        </Button>
@@ -169,7 +165,9 @@ export function AppSidebar({
         <div className="flex items-center justify-between group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-2">
           <SettingsDialog 
             onDeleteAllSessions={onDeleteAllSessions}
-            isHistoryEmpty={sessions.length === 0}
+            isHistoryEmpty={isHistoryEmpty}
+            selectedApiProvider={selectedApiProvider}
+            setSelectedApiProvider={setSelectedApiProvider}
           />
           <ThemeToggle />
         </div>
