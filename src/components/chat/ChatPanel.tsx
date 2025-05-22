@@ -78,24 +78,25 @@ export function ChatPanel({ currentSession, setCurrentSession, saveSession, apiE
     
     const requestBody: LmStudioRequestBody = {
       messages: apiMessages,
-      mode: "chat",
+      mode: "chat", 
       stream: false,
       temperature: 0.7,
     };
 
+    const effectiveApiEndpoint = apiEndpoint?.trim();
+
     try {
-      if (!apiEndpoint) {
+      if (!effectiveApiEndpoint) {
         throw new Error("API endpoint is not configured. Please set NEXT_PUBLIC_LM_STUDIO_API_ENDPOINT in your .env.local file.");
       }
-      const response = await fetch(apiEndpoint, {
+      const response = await fetch(effectiveApiEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
-        // mode: 'no-cors', // TEMPORARY DIAGNOSTIC - REMOVE FOR NORMAL OPERATION
       });
 
       if (!response.ok) {
-        // Attempt to get more info if possible, though this might be limited by CORS
+        // Attempt to get more info if possible
         const errorText = await response.text().catch(() => `Status: ${response.status}, StatusText: ${response.statusText}. No further details available.`);
         throw new Error(`API request failed. ${errorText}`);
       }
@@ -127,8 +128,8 @@ export function ChatPanel({ currentSession, setCurrentSession, saveSession, apiE
       console.error("Error during API call:", error);
       let detailedErrorMessage = "An unexpected error occurred while contacting the AI.";
 
-      if (error instanceof TypeError && error.message === "Failed to fetch") {
-        detailedErrorMessage = "Network Error: Failed to fetch. This is often due to CORS issues, the API server (LM Studio via Pinggy) being down, or an incorrect API URL. Please check: \n1. LM Studio server is running & API is enabled. \n2. Pinggy tunnel is active & correct. \n3. LM Studio CORS settings (allow your app's origin e.g., http://localhost:9002). \n4. The API URL in your .env.local file.";
+      if (error instanceof TypeError && error.message.toLowerCase().includes("failed to fetch")) {
+         detailedErrorMessage = "Network Error: Failed to fetch. This is OFTEN due to CORS issues, the API server (LM Studio via Pinggy) being down, or an incorrect API URL.\n\nTroubleshooting Steps:\n1. LM Studio CORS Settings: Ensure LM Studio allows requests from your app's origin (e.g., http://localhost:9002). Check LM Studio's server settings for 'Allowed Origins' or 'CORS: Allow all'.\n2. Pinggy Tunnel: Verify your Pinggy tunnel is active and correctly pointing to your LM Studio server.\n3. LM Studio Server: Make sure LM Studio is running and its API server is enabled.\n4. API URL: Double-check NEXT_PUBLIC_LM_STUDIO_API_ENDPOINT in your .env.local file.\n5. Browser Console: Look for more specific CORS error messages in your browser's developer console (Network tab).";
       } else if (error.message) {
         detailedErrorMessage = error.message;
       }
@@ -137,7 +138,7 @@ export function ChatPanel({ currentSession, setCurrentSession, saveSession, apiE
         variant: "destructive",
         title: "API Connection Error",
         description: detailedErrorMessage,
-        duration: 9000, // Show toast longer for detailed messages
+        duration: 15000, 
       });
 
        const errorResponseMessage: Message = {
@@ -183,3 +184,4 @@ export function ChatPanel({ currentSession, setCurrentSession, saveSession, apiE
     </div>
   );
 }
+
