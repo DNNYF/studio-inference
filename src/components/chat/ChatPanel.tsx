@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -6,7 +7,7 @@ import { ChatMessage } from "./ChatMessage";
 import { MessageInput } from "./MessageInput";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { v4 as uuidv4 } from 'uuid'; 
+import { v4 as uuidv4 } from 'uuid';
 import { Bot } from 'lucide-react';
 
 interface ChatPanelProps {
@@ -78,7 +79,7 @@ export function ChatPanel({ currentSession, setCurrentSession, saveSession, apiE
     
     const requestBody: LmStudioRequestBody = {
       messages: apiMessages,
-      mode: "chat", // Restored for LM Studio compatibility
+      mode: "chat",
       stream: false,
       temperature: 0.7,
     };
@@ -91,13 +92,19 @@ export function ChatPanel({ currentSession, setCurrentSession, saveSession, apiE
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
+        mode: 'no-cors', // TEMPORARY DIAGNOSTIC CHANGE
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
-        throw new Error(`API Error: ${response.status} ${response.statusText}. ${errorData.message || ''}`);
+        // With 'no-cors', response.ok will be false, status 0, and statusText empty for CORS errors
+        // We won't be able to read response.json() either.
+        const errorDetail = `Status: ${response.status}, StatusText: ${response.statusText}. This might indicate a CORS issue if status is 0. Check server CORS configuration.`;
+        // Attempt to get more info, but this will likely fail with no-cors
+        const errorData = await response.text().catch(() => "Could not read error response body (expected with no-cors).");
+        throw new Error(`API Error: ${errorDetail} Body: ${errorData}`);
       }
 
+      // This part will likely not be reached or will fail with 'no-cors'
       const data = await response.json() as LmStudioResponse;
       
       if (data.choices && data.choices.length > 0 && data.choices[0].message) {
@@ -119,7 +126,7 @@ export function ChatPanel({ currentSession, setCurrentSession, saveSession, apiE
         saveSession(finalSession);
 
       } else {
-        throw new Error("Invalid response structure from API.");
+        throw new Error("Invalid response structure from API (or response body inaccessible due to no-cors).");
       }
     } catch (error: any) {
       console.error("Error fetching from API:", error);
